@@ -57,10 +57,10 @@ export class SubagentRunner {
       const result = await loop.run(task);
 
       subagentTask.status = "completed";
-      subagentTask.result = result;
+      subagentTask.result = result.content;
       subagentTask.tokenUsage = {
         input: subSession.contextWindow.usedTokens,
-        output: result.length,
+        output: result.content.length,
       };
 
       logger.info(`Subagent "${definition.name}" completed`);
