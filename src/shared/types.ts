@@ -1,5 +1,9 @@
 // src/shared/types.ts
 
+import type { LLMConfig, ToolCall } from "../core/llm/provider.js";
+
+export type { LLMConfig, ToolCall };
+
 export interface ClientConfig {
   name: string;
   command: string;
@@ -11,16 +15,6 @@ export interface ClientConfig {
   mcp: MCPConfig;
   branding: BrandingConfig;
 }
-
-export interface LLMConfig {
-  provider: "anthropic" | "openai" | "azure";
-  model: string;
-  apiKey?: string;
-  baseURL?: string;
-  maxTokens: number;
-  temperature: number;
-}
-
 export interface ModesConfig {
   plan: ModeConfig;
   build: ModeConfig;
@@ -123,12 +117,6 @@ export interface Message {
   toolCalls?: ToolCall[];
   toolCallId?: string;
   timestamp: Date;
-}
-
-export interface ToolCall {
-  id: string;
-  name: string;
-  arguments: Record<string, unknown>;
 }
 
 export interface ContextWindow {

@@ -9,6 +9,8 @@ const LLMConfigSchema = z.object({
   baseURL: z.string().url().optional(),
   maxTokens: z.number().int().positive().default(8192),
   temperature: z.number().min(0).max(2).default(0.7),
+  maxRetries: z.number().int().positive().optional(),
+  retryDelay: z.number().int().positive().optional(),
 });
 
 const ModeConfigSchema = z.object({

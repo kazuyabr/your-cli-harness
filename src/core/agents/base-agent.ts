@@ -2,7 +2,7 @@
 
 import type { Session, Agent } from "../../shared/types.js";
 import type { LLMProvider } from "../llm/provider.js";
-import { AgentLoop, type AgentLoopConfig, type ToolDefinition } from "../orchestrator/agent-loop.js";
+import { AgentLoop, type AgentLoopConfig, type AgentToolDefinition } from "../orchestrator/agent-loop.js";
 import { createLogger } from "../../shared/logger.js";
 
 const logger = createLogger();
@@ -20,7 +20,7 @@ export abstract class BaseAgent implements Agent {
     this.llm = llm;
   }
 
-  async execute(session: Session, prompt: string, tools: ToolDefinition[] = []): Promise<string> {
+  async execute(session: Session, prompt: string, tools: AgentToolDefinition[] = []): Promise<string> {
     logger.info(`Agent "${this.name}" executing (session: ${session.id})`);
 
     const config: AgentLoopConfig = {

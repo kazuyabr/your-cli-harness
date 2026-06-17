@@ -1,4 +1,4 @@
-// src/core/llm/openai.ts
+// src/core/llm/azure.ts
 
 import OpenAI from "openai";
 
@@ -6,10 +6,10 @@ import type { Message } from "../../shared/types.js";
 import type {
   LLMProvider,
   LLMResponse,
-  LLMConfig,
   ToolDefinition,
   ToolCall,
   StreamChunk,
+  AzureConfig,
 } from "./provider.js";
 import { LLMError } from "../../shared/errors.js";
 import { createLogger } from "../../shared/logger.js";
@@ -19,22 +19,28 @@ const logger = createLogger();
 const DEFAULT_MAX_RETRIES = 3;
 const DEFAULT_RETRY_DELAY = 1000;
 
-export class OpenAIProvider implements LLMProvider {
-  readonly name = "openai";
+function createAzureClient(config: AzureConfig): OpenAI {
+  return new OpenAI({
+    apiKey: config.apiKey ?? process.env.AZURE_OPENAI_API_KEY,
+    baseURL: `https://${config.resourceName}.openai.azure.com/openai/deployments/${config.deploymentName}`,
+    defaultQuery: { "api-version": config.apiVersion },
+    defaultHeaders: { "api-key": config.apiKey ?? process.env.AZURE_OPENAI_API_KEY ?? "" },
+    maxRetries: config.maxRetries ?? DEFAULT_MAX_RETRIES,
+  });
+}
+
+export class AzureOpenAIProvider implements LLMProvider {
+  readonly name = "azure";
   readonly model: string;
   readonly maxTokens: number;
   private client: OpenAI;
-  private config: LLMConfig;
+  private config: AzureConfig;
 
-  constructor(config: LLMConfig) {
-    this.model = config.model;
+  constructor(config: AzureConfig) {
+    this.model = config.deploymentName;
     this.maxTokens = config.maxTokens;
     this.config = config;
-    this.client = new OpenAI({
-      apiKey: config.apiKey ?? process.env.OPENAI_API_KEY,
-      baseURL: config.baseURL,
-      maxRetries: config.maxRetries ?? DEFAULT_MAX_RETRIES,
-    });
+    this.client = createAzureClient(config);
   }
 
   async chat(
@@ -46,10 +52,8 @@ export class OpenAIProvider implements LLMProvider {
       const openaiMessages = this.toOpenAIMessages(messages, systemPrompt);
       const openaiTools = tools ? this.toOpenAITools(tools) : undefined;
 
-      logger.debug(`OpenAI chat: ${openaiMessages.length} messages, ${tools?.length ?? 0} tools`);
-
       const params: OpenAI.ChatCompletionCreateParams = {
-        model: this.model,
+        model: this.config.deploymentName,
         messages: openaiMessages,
         max_tokens: this.maxTokens,
         temperature: this.config.temperature,
@@ -75,7 +79,7 @@ export class OpenAIProvider implements LLMProvider {
     const openaiTools = tools ? this.toOpenAITools(tools) : undefined;
 
     const params: OpenAI.ChatCompletionCreateParams = {
-      model: this.model,
+      model: this.config.deploymentName,
       messages: openaiMessages,
       max_tokens: this.maxTokens,
       temperature: this.config.temperature,
@@ -156,14 +160,14 @@ export class OpenAIProvider implements LLMProvider {
       } catch (err) {
         const isRetryable = this.isRetryableError(err);
         if (attempt === maxRetries || !isRetryable) {
-          throw new LLMError(`OpenAI API error (attempt ${attempt}/${maxRetries}): ${err}`, err as Error);
+          throw new LLMError(`Azure OpenAI error (attempt ${attempt}/${maxRetries}): ${err}`, err as Error);
         }
         const delay = retryDelay * Math.pow(2, attempt - 1);
-        logger.warn(`OpenAI retry ${attempt}/${maxRetries} after ${delay}ms: ${err}`);
+        logger.warn(`Azure retry ${attempt}/${maxRetries} after ${delay}ms: ${err}`);
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
-    throw new LLMError("OpenAI API: max retries exceeded");
+    throw new LLMError("Azure OpenAI: max retries exceeded");
   }
 
   private isRetryableError(err: unknown): boolean {
@@ -185,11 +189,7 @@ export class OpenAIProvider implements LLMProvider {
       if (m.role === "system") continue;
 
       if (m.role === "tool") {
-        result.push({
-          role: "tool",
-          content: m.content,
-          tool_call_id: m.toolCallId ?? "",
-        });
+        result.push({ role: "tool", content: m.content, tool_call_id: m.toolCallId ?? "" });
       } else if (m.role === "assistant" && m.toolCalls && m.toolCalls.length > 0) {
         result.push({
           role: "assistant",
@@ -201,10 +201,7 @@ export class OpenAIProvider implements LLMProvider {
           })),
         });
       } else {
-        result.push({
-          role: m.role as "user" | "assistant",
-          content: m.content,
-        });
+        result.push({ role: m.role as "user" | "assistant", content: m.content });
       }
     }
 
@@ -214,11 +211,7 @@ export class OpenAIProvider implements LLMProvider {
   private toOpenAITools(tools: ToolDefinition[]): OpenAI.ChatCompletionTool[] {
     return tools.map((t) => ({
       type: "function" as const,
-      function: {
-        name: t.name,
-        description: t.description,
-        parameters: t.parameters,
-      },
+      function: { name: t.name, description: t.description, parameters: t.parameters },
     }));
   }
 

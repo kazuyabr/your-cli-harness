@@ -3,7 +3,7 @@
 import type { Session, SubagentTask } from "../../shared/types.js";
 import type { LLMProvider } from "../llm/provider.js";
 import type { SubagentDefinition } from "./registry.js";
-import { AgentLoop, type ToolDefinition } from "../orchestrator/agent-loop.js";
+import { AgentLoop, type AgentToolDefinition } from "../orchestrator/agent-loop.js";
 import { generateId } from "../../shared/utils.js";
 import { createLogger } from "../../shared/logger.js";
 
@@ -11,9 +11,9 @@ const logger = createLogger();
 
 export class SubagentRunner {
   private llm: LLMProvider;
-  private tools: ToolDefinition[];
+  private tools: AgentToolDefinition[];
 
-  constructor(llm: LLMProvider, tools: ToolDefinition[] = []) {
+  constructor(llm: LLMProvider, tools: AgentToolDefinition[] = []) {
     this.llm = llm;
     this.tools = tools;
   }

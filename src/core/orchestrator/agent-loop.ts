@@ -1,7 +1,7 @@
 // src/core/orchestrator/agent-loop.ts
 
 import type { Session, Message, ToolCall } from "../../shared/types.js";
-import type { LLMProvider } from "../llm/provider.js";
+import type { LLMProvider, ToolDefinition } from "../llm/provider.js";
 import type { Skill } from "../../shared/types.js";
 import { createLogger } from "../../shared/logger.js";
 
@@ -12,13 +12,10 @@ export interface AgentLoopConfig {
   session: Session;
   systemPrompt: string;
   skills: Skill[];
-  tools: ToolDefinition[];
+  tools: AgentToolDefinition[];
 }
 
-export interface ToolDefinition {
-  name: string;
-  description: string;
-  parameters: Record<string, unknown>;
+export interface AgentToolDefinition extends ToolDefinition {
   execute: (args: Record<string, unknown>) => Promise<string>;
 }
 
@@ -41,7 +38,11 @@ export class AgentLoop {
       this.turnCount++;
       logger.info(`Turn ${this.turnCount}/${this.config.maxTurns}`);
 
-      const response = await this.llm.chat(this.config.session.messages, this.config.systemPrompt);
+      const response = await this.llm.chat(
+        this.config.session.messages,
+        this.config.systemPrompt,
+        this.config.tools
+      );
 
       if (response.toolCalls && response.toolCalls.length > 0) {
         for (const toolCall of response.toolCalls) {
