@@ -30,3 +30,4 @@ export function createReadOnlyTools(ctx: ToolExecutionContext): AgentToolDefinit
 }
 
 export { createReadTool, createWriteTool, createEditTool, createBashTool, createGrepTool, createGlobTool };
+export { createSubagentTool } from "./subagent.js";

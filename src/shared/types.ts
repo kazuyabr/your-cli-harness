@@ -159,16 +159,6 @@ export interface Agent {
   maxTurns?: number;
 }
 
-export interface SubagentTask {
-  id: string;
-  agentName: string;
-  prompt: string;
-  status: "pending" | "running" | "completed" | "failed";
-  result?: string;
-  error?: string;
-  tokenUsage?: { input: number; output: number };
-}
-
 export type LogLevel = "debug" | "info" | "warn" | "error";
 
 export interface Logger {
