@@ -1,0 +1,33 @@
+// src/core/config/defaults.ts
+
+import type { ValidatedClientConfig } from "./schema.js";
+
+export function getDefaults(): ValidatedClientConfig {
+  return {
+    name: "unnamed",
+    command: "unnamed",
+    version: "0.1.0",
+    description: "",
+    llm: {
+      provider: "anthropic",
+      model: "claude-sonnet-4-20250514",
+      maxTokens: 8192,
+      temperature: 0.7,
+    },
+    modes: {
+      plan: { enabled: true, readOnly: true, autoExecute: false, requireConfirmation: true, description: "Plan mode" },
+      build: { enabled: true, readOnly: false, autoExecute: true, requireConfirmation: false, description: "Build mode" },
+      yolo: { enabled: false, readOnly: false, autoExecute: true, requireConfirmation: false, description: "YOLO mode" },
+      default: { enabled: true, readOnly: false, autoExecute: false, requireConfirmation: true, description: "Default mode" },
+    },
+    memory: {
+      auto: { enabled: true, maxLines: 200, maxKB: 25 },
+      vector: { provider: "none", indexer: { sources: [], chunkSize: 1000, overlap: 200 } },
+    },
+    mcp: { servers: [] },
+    branding: {
+      colors: { primary: "#D97757", secondary: "#6A9BCC", accent: "#558A42", error: "#DC2626", warning: "#F59E0B", success: "#10B981" },
+      theme: "professional",
+    },
+  };
+}

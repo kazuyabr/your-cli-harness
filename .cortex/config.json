@@ -1,0 +1,18 @@
+{
+  "version": "0.1.0",
+  "projectName": "your-cli-harness",
+  "projectPath": "d:\\Workspace\\your-cli-harness",
+  "createdAt": "2026-06-17T14:29:26.920Z",
+  "maxWorkingMemoryTokens": 800,
+  "autoInject": true,
+  "extractionModel": "claude-haiku-4-5-20251001",
+  "teamSyncEnabled": false,
+  "ignorePaths": [
+    "node_modules",
+    ".git",
+    "dist",
+    "build",
+    ".next",
+    "coverage"
+  ]
+}
