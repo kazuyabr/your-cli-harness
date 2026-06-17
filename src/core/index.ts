@@ -2,7 +2,8 @@
 
 export { ConfigLoader } from "./config/loader.js";
 export { ClientConfigSchema } from "./config/schema.js";
-export { SessionManager } from "./context/session.js";
+export { TokenCounter } from "./context/token-counter.js";
+export { SessionManager, FileSessionPersistence } from "./context/session.js";
 export { ContextWindowManager } from "./context/window.js";
 export { CompactionEngine } from "./context/compaction.js";
 export { HeadroomMonitor } from "./context/headroom.js";
