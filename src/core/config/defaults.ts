@@ -8,12 +8,14 @@ export function getDefaults(): ValidatedClientConfig {
     command: "unnamed",
     version: "0.1.0",
     description: "",
-    llm: {
-      provider: "anthropic",
-      model: "claude-sonnet-4-20250514",
-      maxTokens: 8192,
-      temperature: 0.7,
-    },
+  llm: {
+    provider: "anthropic",
+    model: "claude-sonnet-4-20250514",
+    maxTokens: 8192,
+    temperature: 0.7,
+    maxRetries: 3,
+    retryDelay: 1000,
+  },
     modes: {
       plan: { enabled: true, readOnly: true, autoExecute: false, requireConfirmation: true, description: "Plan mode" },
       build: { enabled: true, readOnly: false, autoExecute: true, requireConfirmation: false, description: "Build mode" },

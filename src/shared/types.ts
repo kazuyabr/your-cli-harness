@@ -1,5 +1,9 @@
 // src/shared/types.ts
 
+import type { LLMConfig, ToolCall } from "../core/llm/provider.js";
+
+export type { LLMConfig, ToolCall };
+
 export interface ClientConfig {
   name: string;
   command: string;
@@ -11,16 +15,6 @@ export interface ClientConfig {
   mcp: MCPConfig;
   branding: BrandingConfig;
 }
-
-export interface LLMConfig {
-  provider: "anthropic" | "openai" | "azure";
-  model: string;
-  apiKey?: string;
-  baseURL?: string;
-  maxTokens: number;
-  temperature: number;
-}
-
 export interface ModesConfig {
   plan: ModeConfig;
   build: ModeConfig;
@@ -125,12 +119,6 @@ export interface Message {
   timestamp: Date;
 }
 
-export interface ToolCall {
-  id: string;
-  name: string;
-  arguments: Record<string, unknown>;
-}
-
 export interface ContextWindow {
   maxTokens: number;
   usedTokens: number;
@@ -146,7 +134,12 @@ export interface Skill {
   path: string;
   content: string;
   frontmatter: SkillFrontmatter;
+  scope: SkillScope;
+  source: string;
+  loadedAt: Date;
 }
+
+export type SkillScope = "built-in" | "client" | "project";
 
 export interface SkillFrontmatter {
   name?: string;
@@ -160,6 +153,37 @@ export interface SkillFrontmatter {
   context?: "inline" | "fork";
   agent?: string;
   paths?: string[];
+  tags?: string[];
+  argumentHint?: string;
+}
+
+export interface SkillInvocation {
+  skillName: string;
+  arguments: Record<string, string>;
+  context: SkillInvocationContext;
+}
+
+export interface SkillInvocationContext {
+  workingDirectory: string;
+  session: {
+    id: string;
+    clientId: string;
+  };
+  mode: string;
+}
+
+export interface SkillInvocationResult {
+  success: boolean;
+  content: string;
+  error?: string;
+  duration: number;
+}
+
+export interface SkillSearchOptions {
+  scope?: SkillScope;
+  tag?: string;
+  query?: string;
+  autoInvocable?: boolean;
 }
 
 export interface Agent {
@@ -169,16 +193,6 @@ export interface Agent {
   tools: string[];
   model?: string;
   maxTurns?: number;
-}
-
-export interface SubagentTask {
-  id: string;
-  agentName: string;
-  prompt: string;
-  status: "pending" | "running" | "completed" | "failed";
-  result?: string;
-  error?: string;
-  tokenUsage?: { input: number; output: number };
 }
 
 export type LogLevel = "debug" | "info" | "warn" | "error";

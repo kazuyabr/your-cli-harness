@@ -3,6 +3,7 @@
 import type { Session } from "../../shared/types.js";
 import { ContextWindowManager } from "./window.js";
 import { CompactionEngine } from "./compaction.js";
+import { TokenCounter } from "./token-counter.js";
 import { createLogger } from "../../shared/logger.js";
 
 const logger = createLogger();
@@ -16,35 +17,54 @@ export interface HeadroomStatus {
   headroomTokens: number;
   usagePercent: number;
   shouldCompact: boolean;
+  shouldSuggest: boolean;
   message: string;
+  breakdown: {
+    system: number;
+    messages: number;
+    tools: number;
+  };
 }
+
+export interface HeadroomConfig {
+  autoCompactThreshold: number;
+  suggestThreshold: number;
+  emergencyThreshold: number;
+  model: string;
+}
+
+const DEFAULT_CONFIG: HeadroomConfig = {
+  autoCompactThreshold: 95,
+  suggestThreshold: 80,
+  emergencyThreshold: 95,
+  model: "claude-sonnet-4-20250514",
+};
 
 export class HeadroomMonitor {
   private windowManager: ContextWindowManager;
   private compactionEngine: CompactionEngine;
-  private autoCompactThreshold: number;
+  private config: HeadroomConfig;
 
-  constructor(
-    maxTokens: number = 200_000,
-    autoCompactThreshold: number = 95,
-    _suggestThreshold: number = 80
-  ) {
-    this.windowManager = new ContextWindowManager(maxTokens);
+  constructor(config: Partial<HeadroomConfig> = {}) {
+    this.config = { ...DEFAULT_CONFIG, ...config };
+    const limits = TokenCounter.getModelLimits(this.config.model);
+    this.windowManager = new ContextWindowManager(limits.contextWindow);
     this.compactionEngine = new CompactionEngine();
-    this.autoCompactThreshold = autoCompactThreshold;
   }
 
   check(session: Session): HeadroomStatus {
-    const usagePercent = (session.contextWindow.usedTokens / session.contextWindow.maxTokens) * 100;
-    const level = this.windowManager.getLevel();
-    const headroomTokens = session.contextWindow.maxTokens - session.contextWindow.usedTokens;
+    const cw = session.contextWindow;
+    const usagePercent = (cw.usedTokens / cw.maxTokens) * 100;
+    const headroomTokens = cw.maxTokens - cw.usedTokens;
 
-    const shouldCompact = usagePercent >= this.autoCompactThreshold;
+    const shouldSuggest = usagePercent >= this.config.suggestThreshold;
+    const shouldCompact = usagePercent >= this.config.autoCompactThreshold;
+    const level = this.determineLevel(usagePercent);
 
     let message: string;
     switch (level) {
       case "safe":
-        message = `Context: ${usagePercent.toFixed(1)}% used (${headroomTokens} tokens free)`;
+        message = `✅ Context: ${usagePercent.toFixed(1)}% (${headroomTokens.toLocaleString()} free)`;
         break;
       case "attention":
         message = `⚠️ Context at ${usagePercent.toFixed(1)}%. Consider /compact soon.`;
@@ -53,18 +73,24 @@ export class HeadroomMonitor {
         message = `🔴 Context at ${usagePercent.toFixed(1)}%. Compaction recommended.`;
         break;
       case "emergency":
-        message = `🚨 Context at ${usagePercent.toFixed(1)}! Auto-compacting...`;
+        message = `🚨 Context at ${usagePercent.toFixed(1)}%! Auto-compacting...`;
         break;
     }
 
     return {
       level,
-      usedTokens: session.contextWindow.usedTokens,
-      maxTokens: session.contextWindow.maxTokens,
+      usedTokens: cw.usedTokens,
+      maxTokens: cw.maxTokens,
       headroomTokens,
       usagePercent,
       shouldCompact,
+      shouldSuggest,
       message,
+      breakdown: {
+        system: cw.systemTokens,
+        messages: cw.messageTokens,
+        tools: cw.toolTokens,
+      },
     };
   }
 
@@ -73,16 +99,52 @@ export class HeadroomMonitor {
     if (!status.shouldCompact) return false;
 
     logger.info("Auto-compacting context...");
-    const result = this.compactionEngine.compact(session);
+    const result = this.compactionEngine.apply(session);
 
-    session.messages = [
-      ...result.preservedMessages,
-    ];
-    session.contextWindow.messageTokens = result.tokensAfter;
-    session.contextWindow.usedTokens =
-      session.contextWindow.systemTokens + session.contextWindow.messageTokens;
-
-    logger.info(`Auto-compaction complete: ${result.tokensBefore} → ${result.tokensAfter} tokens`);
+    logger.info(
+      `Auto-compaction complete: ${result.tokensBefore} → ${result.tokensAfter} tokens ` +
+      `(${(result.compressionRatio * 100).toFixed(1)}%)`
+    );
     return true;
+  }
+
+  suggestAction(session: Session): string | null {
+    const status = this.check(session);
+    if (status.level === "emergency") {
+      return "Context is critically full. Compaction will be applied automatically.";
+    }
+    if (status.level === "critical") {
+      return "Context is running low. Run /compact to free space.";
+    }
+    if (status.level === "attention") {
+      return "Context is getting full. Consider compacting soon.";
+    }
+    return null;
+  }
+
+  renderStatus(session: Session): string {
+    const status = this.check(session);
+    const bar = this.windowManager.renderBar(30);
+
+    const lines = [
+      "",
+      "📊 Context Window",
+      `  ${bar}`,
+      `  System:  ${status.breakdown.system.toLocaleString().padStart(8)} tokens`,
+      `  Messages:${status.breakdown.messages.toLocaleString().padStart(8)} tokens`,
+      `  Tools:   ${status.breakdown.tools.toLocaleString().padStart(8)} tokens`,
+      `  Total:   ${status.usedTokens.toLocaleString().padStart(8)} / ${status.maxTokens.toLocaleString()} tokens`,
+      `  Free:    ${status.headroomTokens.toLocaleString().padStart(8)} tokens`,
+      "",
+    ];
+
+    return lines.join("\n");
+  }
+
+  private determineLevel(usagePercent: number): HeadroomLevel {
+    if (usagePercent >= this.config.emergencyThreshold) return "emergency";
+    if (usagePercent >= this.config.autoCompactThreshold) return "critical";
+    if (usagePercent >= this.config.suggestThreshold) return "attention";
+    return "safe";
   }
 }
