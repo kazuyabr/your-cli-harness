@@ -1,8 +1,8 @@
 // src/core/memory/manager.ts
 // Memory Manager: auto-memory, MEMORY.md management, compaction, session memory
 
-import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, unlinkSync } from "node:fs";
-import { resolve, dirname, join } from "node:path";
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { resolve, dirname } from "node:path";
 
 import type { AutoMemoryConfig } from "../../shared/types.js";
 import { createLogger } from "../../shared/logger.js";
@@ -32,12 +32,10 @@ export interface CompactOptions {
 
 export class MemoryManager {
   private config: AutoMemoryConfig;
-  private memoryDir: string;
   private memoryPath: string;
 
   constructor(config: AutoMemoryConfig, memoryDir: string) {
     this.config = config;
-    this.memoryDir = memoryDir;
     this.memoryPath = resolve(memoryDir, "MEMORY.md");
   }
 
@@ -107,8 +105,6 @@ export class MemoryManager {
 
   addEntry(entry: Omit<MemoryEntry, "id" | "timestamp">): void {
     const id = `mem_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    const timestamp = new Date();
-
     const line = `- [${id}] ${entry.content}`;
     this.append(line);
   }
@@ -122,11 +118,14 @@ export class MemoryManager {
 
     for (const line of lines) {
       const match = line.match(/^- \[(mem_\d+_[a-z0-9]+)\] (.+)$/);
-      if (match) {
+      if (match && match[1] && match[2]) {
+        const id = match[1];
+        const content = match[2];
+        const timestampStr = id.split("_")[1];
         entries.push({
-          id: match[1],
-          content: match[2],
-          timestamp: new Date(parseInt(match[1].split("_")[1])),
+          id,
+          content,
+          timestamp: new Date(parseInt(timestampStr ?? "0")),
           source: "assistant",
         });
       }
@@ -214,7 +213,8 @@ export class MemoryManager {
 
     let endIdx = lines.length;
     for (let i = startIdx + 1; i < lines.length; i++) {
-      if (/^#{1,6}\s/.test(lines[i])) {
+      const line = lines[i];
+      if (line && /^#{1,6}\s/.test(line)) {
         endIdx = i;
         break;
       }
@@ -240,7 +240,8 @@ export class MemoryManager {
 
     let endIdx = lines.length;
     for (let i = startIdx + 1; i < lines.length; i++) {
-      if (/^#{1,6}\s/.test(lines[i])) {
+      const line = lines[i];
+      if (line && /^#{1,6}\s/.test(line)) {
         endIdx = i;
         break;
       }
