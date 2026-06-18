@@ -42,6 +42,10 @@ export { OpenAIEmbedder, NullEmbedder, createEmbedder } from "./memory/vector/em
 export { DocumentChunker } from "./memory/vector/chunker.js";
 export { DocumentIndexer } from "./memory/vector/indexer.js";
 export { VectorMemoryManager } from "./memory/vector/manager.js";
+export { BrandingLoader } from "./branding/loader.js";
+export { BrandingRenderer } from "./branding/renderer.js";
+export { BrandManager } from "./branding/brand-manager.js";
+export { THEME_PRESETS, getThemePreset } from "./branding/themes.js";
 export type { VectorStore, VectorDocument, VectorSearchResult, Embedder, VectorStoreConfig, IndexerConfig, IndexerSource } from "./memory/vector/types.js";
 export type { LLMConfig, LLMResponse, ToolDefinition, ToolCall, StreamChunk } from "./llm/provider.js";
 export type { AgentToolDefinition, AgentLoopConfig, AgentLoopResult } from "./orchestrator/agent-loop.js";
@@ -49,3 +53,4 @@ export type { ToolExecutionContext } from "./tools/types.js";
 export type { SubagentDefinition, SubagentScope } from "./subagents/registry.js";
 export type { SubagentTask, SubagentRunOptions, SubagentRunResult } from "./subagents/runner.js";
 export type { SubagentNode, OrchestratorResult } from "./subagents/orchestrator.js";
+export type { ThemePreset } from "./branding/themes.js";
