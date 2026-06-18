@@ -8,6 +8,7 @@ export { ContextWindowManager } from "./context/window.js";
 export { CompactionEngine } from "./context/compaction.js";
 export { HeadroomMonitor } from "./context/headroom.js";
 export { AgentLoop } from "./orchestrator/agent-loop.js";
+export { ModeManager } from "./modes/mode-manager.js";
 export { PLAN_MODE, PLAN_SYSTEM_PROMPT } from "./orchestrator/modes/plan.js";
 export { BUILD_MODE, BUILD_SYSTEM_PROMPT } from "./orchestrator/modes/build.js";
 export { YOLO_MODE, YOLO_SYSTEM_PROMPT } from "./orchestrator/modes/yolo.js";

@@ -30,6 +30,8 @@ export interface ModeConfig {
   description: string;
 }
 
+export type Mode = "plan" | "build" | "yolo" | "default";
+
 export interface MemoryConfig {
   auto: AutoMemoryConfig;
   vector: VectorMemoryConfig;
