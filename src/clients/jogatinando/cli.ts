@@ -129,8 +129,8 @@ program
   .action(() => {
     const { skillsDir, coreSkillsDir } = loadClient();
     const engine = new SkillEngine();
-    engine.loadFromDirectory(coreSkillsDir);
-    engine.loadFromDirectory(skillsDir);
+    engine.loadBuiltInSkills(coreSkillsDir);
+    engine.loadClientSkills(skillsDir);
 
     const skills = engine.getAll();
     console.log("");
@@ -169,9 +169,8 @@ program.action(async (prompt: string[], options) => {
   const headroom = new HeadroomMonitor();
   const memory = new MemoryManager(config.memory.auto, memoryDir);
   const skillEngine = new SkillEngine();
-
-  skillEngine.loadFromDirectory(coreSkillsDir);
-  skillEngine.loadFromDirectory(skillsDir);
+  skillEngine.loadBuiltInSkills(coreSkillsDir);
+  skillEngine.loadClientSkills(skillsDir);
 
   const memoryContent = memory.load();
   if (memoryContent) {

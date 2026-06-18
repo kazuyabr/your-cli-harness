@@ -85,7 +85,7 @@ command: skilltest
     );
 
     const engine = new SkillEngine();
-    engine.loadFromDirectory(resolve(TEST_DIR, "skills"));
+    engine.loadClientSkills(resolve(TEST_DIR, "skills"));
 
     const skill = engine.get("deploy");
     expect(skill).toBeDefined();

@@ -134,7 +134,12 @@ export interface Skill {
   path: string;
   content: string;
   frontmatter: SkillFrontmatter;
+  scope: SkillScope;
+  source: string;
+  loadedAt: Date;
 }
+
+export type SkillScope = "built-in" | "client" | "project";
 
 export interface SkillFrontmatter {
   name?: string;
@@ -148,6 +153,37 @@ export interface SkillFrontmatter {
   context?: "inline" | "fork";
   agent?: string;
   paths?: string[];
+  tags?: string[];
+  argumentHint?: string;
+}
+
+export interface SkillInvocation {
+  skillName: string;
+  arguments: Record<string, string>;
+  context: SkillInvocationContext;
+}
+
+export interface SkillInvocationContext {
+  workingDirectory: string;
+  session: {
+    id: string;
+    clientId: string;
+  };
+  mode: string;
+}
+
+export interface SkillInvocationResult {
+  success: boolean;
+  content: string;
+  error?: string;
+  duration: number;
+}
+
+export interface SkillSearchOptions {
+  scope?: SkillScope;
+  tag?: string;
+  query?: string;
+  autoInvocable?: boolean;
 }
 
 export interface Agent {
