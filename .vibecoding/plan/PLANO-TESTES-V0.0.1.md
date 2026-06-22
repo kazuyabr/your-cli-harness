@@ -97,6 +97,31 @@ tests/
     ├── publish-flow.test.ts          ← NOVO
     ├── anti-duplication.test.ts      ← NOVO
     └── security-flow.test.ts         ← NOVO
+
+generated-cli/                         ← NOVO (Testes do CLI Gerado)
+├── jogatinando.test.ts               ← Testes do CLI "jogatinando"
+├── happy-path.test.ts                ← Fluxo completo
+├── features/
+│   ├── language.test.ts              ← Testes de idioma
+│   ├── economy.test.ts               ← Testes de economia
+│   ├── branding.test.ts              ← Testes de branding
+│   └── commands.test.ts              ← Testes de comandos
+└── acceptance/
+    ├── ac-001-language-detect.test.ts
+    ├── ac-002-language-prompts.test.ts
+    ├── ac-003-language-model.test.ts
+    ├── ac-004-headroom.test.ts
+    ├── ac-005-caveman.test.ts
+    ├── ac-006-cost-display.test.ts
+    ├── ac-007-economy-command.test.ts
+    ├── ac-008-economy-off.test.ts
+    ├── ac-009-publish-npm.test.ts
+    ├── ac-010-npx.test.ts
+    ├── ac-011-anti-duplication.test.ts
+    ├── ac-012-language-override.test.ts
+    ├── ac-013-persistence.test.ts
+    ├── ac-014-cache.test.ts
+    └── ac-015-summarization.test.ts
 ```
 
 ---
@@ -405,6 +430,95 @@ tests/e2e/
     └── paths restritos nao acessaveis
 ```
 
+### Fase 12: Generated CLI Tests (CLI Gerado)
+
+```
+tests/generated-cli/
+├── jogatinando.test.ts
+│   ├── harness cria cliente jogatinando
+│   ├── harness build cliente jogatinando
+│   ├── CLI gerado existe
+│   ├── CLI gerado executa
+│   └── CLI gerado mostra help
+│
+├── happy-path.test.ts
+│   ├── fluxo completo: criar → build → usar
+│   ├── idioma detectado automaticamente
+│   ├── economia funciona
+│   ├── branding exibido
+│   ├── comandos funcionam
+│   └── /economy mostra historico
+│
+├── features/
+│   ├── language.test.ts
+│   │   ├── detecta idioma pt-BR
+│   │   ├── detecta idioma en
+│   │   ├── detecta idioma es
+│   │   ├── prompts exibidos no idioma
+│   │   ├── modelo responde no idioma
+│   │   └── override manual funciona
+│   │
+│   ├── economy.test.ts
+│   │   ├── headroom comprime input
+│   │   ├── caveman comprime output
+│   │   ├── cache reutiliza compressao
+│   │   ├── custo real exibido
+│   │   ├── /economy mostra historico
+│   │   ├── /economy --off desliga
+│   │   ├── /economy --on liga
+│   │   └── /tokensummary mostra prompts
+│   │
+│   ├── branding.test.ts
+│   │   ├── FIGlet logo gerado
+│   │   ├── cores aplicadas
+│   │   ├── tema aplicado
+│   │   └── versao exibida
+│   │
+│   └── commands.test.ts
+│       ├── /connect funciona
+│       ├── /model funciona
+│       ├── /sessions funciona
+│       ├── /compact funciona
+│       ├── /new funciona
+│       ├── /undo funciona
+│       ├── /agents funciona
+│       ├── /skills funciona
+│       ├── /mcp funciona
+│       └── /help funciona
+│
+└── acceptance/
+    ├── ac-001-language-detect.test.ts
+    │   └── CLI detecta idioma automaticamente
+    ├── ac-002-language-prompts.test.ts
+    │   └── Prompts exibidos no idioma detectado
+    ├── ac-003-language-model.test.ts
+    │   └── Modelo responde no idioma do cliente
+    ├── ac-004-headroom.test.ts
+    │   └── Headroom comprime input em 60-95%
+    ├── ac-005-caveman.test.ts
+    │   └── Caveman comprime output em 65-75%
+    ├── ac-006-cost-display.test.ts
+    │   └── Custo real exibido abaixo da mensagem
+    ├── ac-007-economy-command.test.ts
+    │   └── /economy mostra historico completo
+    ├── ac-008-economy-off.test.ts
+    │   └── /economy --off desliga compressao
+    ├── ac-009-publish-npm.test.ts
+    │   └── Build com --publish publica no npm
+    ├── ac-010-npx.test.ts
+    │   └── CLI funciona via NPX apos publicacao
+    ├── ac-011-anti-duplication.test.ts
+    │   └── Anti-duplicacao detecta skills repetidas
+    ├── ac-012-language-override.test.ts
+    │   └── Override de idioma funciona
+    ├── ac-013-persistence.test.ts
+    │   └── Persistencia de preferencias funciona
+    ├── ac-014-cache.test.ts
+    │   └── Cache de compressao reutiliza
+    └── ac-015-summarization.test.ts
+        └── Smart Summarization resume conversas
+```
+
 ---
 
 ## 6. Pipeline de CI/CD
@@ -441,6 +555,23 @@ jobs:
         run: npm audit --audit-level=high
       - name: Run security tests
         run: npm run test:security
+
+  generated-cli:
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm run build
+      - name: Create test client
+        run: node dist/cli.js create-client jogatinando
+      - name: Build test client
+        run: node dist/cli.js build-client jogatinando
+      - name: Run generated CLI tests
+        run: npm run test:generated-cli
 ```
 
 ---
@@ -460,6 +591,9 @@ $ npm run test:integration
 # Apenas E2E
 $ npm run test:e2e
 
+# Apenas Generated CLI
+$ npm run test:generated-cli
+
 # Coverage
 $ npm run test:coverage
 
@@ -477,9 +611,11 @@ $ npm run test:watch
 | **Testes de integracao** | ~20+ (novos) |
 | **Testes E2E** | ~30+ (novos) |
 | **Testes de seguranca** | ~40+ (novos) |
-| **Total estimado** | 500+ testes |
+| **Testes do CLI gerado** | ~50+ (novos) |
+| **Total estimado** | 550+ testes |
 | **Coverage minimo** | 80% branches, 90% functions/lines/statements |
 | **CVEs cobertos** | 7 vulnerabilidades |
+| **ACs testados no CLI gerado** | 15/15 |
 
 ---
 
@@ -497,6 +633,6 @@ $ npm run test:watch
 
 ---
 
-**Versao do Plano:** 1.1
+**Versao do Plano:** 1.2
 **Data:** 2026-06-17
 **Autor:** Your CLI Harness Team
