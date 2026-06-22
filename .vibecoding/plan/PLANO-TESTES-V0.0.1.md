@@ -13,6 +13,7 @@ Plano de testes progressivo para garantir que todas as funcionalidades do `feat/
 3. **Coverage minimo** — 80% branches, 90% functions/lines/statements
 4. **Criterios de aceite** — cada AC-001 a AC-015 tem teste dedicado
 5. **Progressivo** — testes crescem junto com o codigo
+6. **Seguranca obrigatória** — CVEs e vulnerabilidades cobertos desde o inicio
 
 ---
 
@@ -59,6 +60,14 @@ tests/
 │   │   │       ├── engine.test.ts
 │   │   │       └── triggers.test.ts
 │   │   │
+│   │   ├── security/                 ← NOVO (CVEs)
+│   │   │   ├── prompt-injection.test.ts
+│   │   │   ├── api-key-security.test.ts
+│   │   │   ├── path-traversal.test.ts
+│   │   │   ├── command-injection.test.ts
+│   │   │   ├── token-leakage.test.ts
+│   │   │   └── data-exposure.test.ts
+│   │   │
 │   │   ├── llm/                      ← ATUALIZAR
 │   │   │   ├── ai-sdk.test.ts        ← NOVO
 │   │   │   ├── factory.test.ts       ← ATUALIZAR
@@ -78,19 +87,23 @@ tests/
 │   ├── config-to-session.test.ts     ← MANTER
 │   ├── token-economy-pipeline.test.ts ← NOVO
 │   ├── language-pipeline.test.ts     ← NOVO
-│   └── compression-pipeline.test.ts  ← NOVO
+│   ├── compression-pipeline.test.ts  ← NOVO
+│   └── security-pipeline.test.ts     ← NOVO
 │
 └── e2e/
     ├── cli-commands.test.ts          ← MANTER
     ├── economy-flow.test.ts          ← NOVO
     ├── language-flow.test.ts         ← NOVO
     ├── publish-flow.test.ts          ← NOVO
-    └── anti-duplication.test.ts      ← NOVO
+    ├── anti-duplication.test.ts      ← NOVO
+    └── security-flow.test.ts         ← NOVO
 ```
 
 ---
 
 ## 4. Mapeamento: Criterio de Aceite → Teste
+
+### 4.1 Funcionalidades
 
 | AC | Criterio | Teste | Tipo |
 |----|----------|-------|------|
@@ -109,6 +122,18 @@ tests/
 | AC-013 | Persistencia de preferencias funciona | `language/persistence.test.ts` | Unit |
 | AC-014 | Cache de compressao reutiliza | `compression/headroom/cache.test.ts` | Unit |
 | AC-015 | Smart Summarization resume conversas | `compression/summarizer/engine.test.ts` | Unit |
+
+### 4.2 Seguranca (CVEs)
+
+| CVE/Ataque | Risco | Teste | Tipo |
+|------------|-------|-------|------|
+| Prompt injection | Usuario injeta comandos no prompt | `security/prompt-injection.test.ts` | Unit |
+| API key leakage | Chaves expostas em logs/erros | `security/api-key-security.test.ts` | Unit |
+| Path traversal | Acesso a fora do diretorio permitido | `security/path-traversal.test.ts` | Unit |
+| Command injection | Injecao de comandos via bash tool | `security/command-injection.test.ts` | Unit |
+| Token leakage | Tokens expostos em outputs | `security/token-leakage.test.ts` | Unit |
+| Data exposure | Dados sensiveis em logs | `security/data-exposure.test.ts` | Unit |
+| Dependency vulnerabilities | npm packages com CVEs | CI/CD pipeline (`npm audit`) | Automated |
 
 ---
 
@@ -324,6 +349,62 @@ tests/e2e/
     └── coverage minimo atingido
 ```
 
+### Fase 11: Seguranca (CVEs)
+
+```
+tests/unit/core/security/
+├── prompt-injection.test.ts
+│   ├── rejeita prompt com "ignore previous instructions"
+│   ├── rejeita prompt com "system: you are now..."
+│   ├── rejeita prompt com injecao de system prompt
+│   ├── sanitiza input do usuario
+│   └── loga tentativa de injecao
+├── api-key-security.test.ts
+│   ├── API key nao aparece em logs
+│   ├── API key nao aparece em erros
+│   ├── API key nao aparece em output
+│   ├── API key mascarada em debug
+│   └── API key nao em .vibecoding/
+├── path-traversal.test.ts
+│   ├── rejeita ../../../etc/passwd
+│   ├── rejeita ..\..\windows\system32
+│   ├── rejeita symlink para fora do projeto
+│   ├── rejeita path com null bytes
+│   └── permite apenas paths dentro do projeto
+├── command-injection.test.ts
+│   ├── rejeita comando com ;
+│   ├── rejeita comando com &&
+│   ├── rejeita comando com |
+│   ├── rejeita comando com $(...)
+│   ├── rejeita comando com `...`
+│   └── sanitiza argumentos do bash tool
+├── token-leakage.test.ts
+│   ├── tokens nao aparecem em output
+│   ├── tokens nao aparecem em logs
+│   ├── tokens nao aparecem em erros
+│   ├── tokens mascarados em debug
+│   └── tokens nao persistidos em disco
+└── data-exposure.test.ts
+    ├── dados sensiveis nao em logs
+    ├── dados sensiveis nao em erros
+    ├── dados sensiveis nao em output
+    ├── dados sensiveis mascarados
+    └── dados sensiveis nao em .vibecoding/
+
+tests/integration/
+└── security-pipeline.test.ts
+    ├── pipeline completo com seguranca
+    ├── prompt injection bloqueado
+    ├── API key protegida
+    └── path traversal bloqueado
+
+tests/e2e/
+└── security-flow.test.ts
+    ├── tentativa de injecao e bloqueada
+    ├── API key nao exposta na UI
+    └── paths restritos nao acessaveis
+```
+
 ---
 
 ## 6. Pipeline de CI/CD
@@ -347,6 +428,19 @@ jobs:
       - run: npm run lint
       - run: npm test -- --coverage
       - run: npm run test:e2e
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+      - name: Run security tests
+        run: npm run test:security
 ```
 
 ---
@@ -382,8 +476,10 @@ $ npm run test:watch
 | **Testes unitarios** | ~150+ (novos) |
 | **Testes de integracao** | ~20+ (novos) |
 | **Testes E2E** | ~30+ (novos) |
-| **Total estimado** | 450+ testes |
+| **Testes de seguranca** | ~40+ (novos) |
+| **Total estimado** | 500+ testes |
 | **Coverage minimo** | 80% branches, 90% functions/lines/statements |
+| **CVEs cobertos** | 7 vulnerabilidades |
 
 ---
 
@@ -392,13 +488,15 @@ $ npm run test:watch
 | Criterio | Meta |
 |----------|------|
 | Todos os ACs testados | 15/15 |
+| CVEs cobertos | 7/7 |
 | Coverage minimo | 80% branches, 90% functions/lines/statements |
 | Testes passando | 100% |
 | Regressoes | 0 |
 | Testes antigos | Todos ainda passando |
+| Audit de dependencias | 0 vulnerabilidades high/critical |
 
 ---
 
-**Versao do Plano:** 1.0
+**Versao do Plano:** 1.1
 **Data:** 2026-06-17
 **Autor:** Your CLI Harness Team
