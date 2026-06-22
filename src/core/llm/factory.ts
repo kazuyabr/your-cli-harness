@@ -1,11 +1,8 @@
 // src/core/llm/factory.ts
 
-import type { LLMConfig, AzureConfig } from "./provider.js";
+import type { LLMConfig } from "./provider.js";
 import type { LLMProvider } from "./provider.js";
-import { AnthropicProvider } from "./anthropic.js";
-import { OpenAIProvider } from "./openai.js";
-import { AzureOpenAIProvider } from "./azure.js";
-import { LLMError } from "../../shared/errors.js";
+import { AISDKProvider } from "./ai-sdk.js";
 import { createLogger } from "../../shared/logger.js";
 
 const logger = createLogger();
@@ -16,27 +13,8 @@ export class LLMFactory {
 
     logger.info(`Creating LLM provider: ${provider}/${config.model}`);
 
-    switch (provider) {
-      case "anthropic":
-        return new AnthropicProvider(config);
-
-      case "openai":
-        return new OpenAIProvider(config);
-
-      case "azure": {
-        const azureConfig: AzureConfig = {
-          ...config,
-          provider: "azure",
-          resourceName: process.env.AZURE_OPENAI_RESOURCE_NAME ?? "",
-          deploymentName: config.model,
-          apiVersion: process.env.AZURE_OPENAI_API_VERSION ?? "2024-10-21",
-        };
-        return new AzureOpenAIProvider(azureConfig);
-      }
-
-      default:
-        throw new LLMError(`Unsupported LLM provider: ${provider}`);
-    }
+    // Use AI SDK for all providers
+    return new AISDKProvider(config);
   }
 
   static validateConfig(config: LLMConfig): string[] {
@@ -46,14 +24,22 @@ export class LLMFactory {
       errors.push("Model is required");
     }
 
-    if (!config.apiKey && !process.env[`${config.provider.toUpperCase()}_API_KEY`]) {
-      errors.push(`API key for ${config.provider} not found (set ${config.provider.toUpperCase()}_API_KEY env var)`);
-    }
+    // Check API key based on provider
+    const providerEnvKeys: Record<string, string> = {
+      anthropic: "ANTHROPIC_API_KEY",
+      openai: "OPENAI_API_KEY",
+      openrouter: "OPENROUTER_API_KEY",
+      groq: "GROQ_API_KEY",
+      together: "TOGETHER_API_KEY",
+      google: "GOOGLE_API_KEY",
+      xai: "XAI_API_KEY",
+      lmstudio: "", // No key needed
+      ollama: "", // No key needed
+    };
 
-    if (config.provider === "azure") {
-      if (!process.env.AZURE_OPENAI_RESOURCE_NAME) {
-        errors.push("AZURE_OPENAI_RESOURCE_NAME env var is required for Azure provider");
-      }
+    const envKey = providerEnvKeys[config.provider];
+    if (envKey && !config.apiKey && !process.env[envKey]) {
+      errors.push(`API key for ${config.provider} not found (set ${envKey} env var)`);
     }
 
     if (config.maxTokens < 1 || config.maxTokens > 200_000) {

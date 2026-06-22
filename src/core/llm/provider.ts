@@ -36,7 +36,7 @@ export interface StreamChunk {
 }
 
 export interface LLMConfig {
-  provider: "anthropic" | "openai" | "azure";
+  provider: "anthropic" | "openai" | "azure" | "openrouter" | "groq" | "together" | "lmstudio" | "ollama" | "xai" | "google";
   model: string;
   apiKey?: string;
   baseURL?: string;

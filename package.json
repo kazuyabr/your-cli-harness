@@ -50,16 +50,21 @@
     "clean": "rimraf dist bin"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.85",
+    "@ai-sdk/google": "^3.0.83",
+    "@ai-sdk/openai": "^3.0.74",
+    "@ai-sdk/xai": "^3.0.96",
     "@anthropic-ai/sdk": "^0.39.0",
     "@modelcontextprotocol/sdk": "^1.0.0",
+    "ai": "^6.0.208",
+    "better-sqlite3": "^11.7.0",
     "chalk": "^5.4.0",
     "commander": "^13.0.0",
+    "glob": "^11.0.0",
     "openai": "^4.70.0",
     "ora": "^8.1.0",
-    "zod": "^3.24.0",
-    "better-sqlite3": "^11.7.0",
-    "glob": "^11.0.0",
-    "yaml": "^2.6.0"
+    "yaml": "^2.6.0",
+    "zod": "^3.24.0"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.12",
