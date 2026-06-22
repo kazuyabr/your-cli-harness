@@ -22,6 +22,8 @@ _Last updated: 2026-06-17T14:29:26.540Z | Tokens: 63/800_
 Toda a documentação de produto/arquitetura está em `.vibecoding/`:
 
 - **`.vibecoding/plan/PLANO-COMPLETO.md`** — Plano completo de implementação (fonte primária)
+- **`.vibecoding/plan/PLANO-HOMOLOGACAO-V0.0.1.md`** — Plano de homologação v0.0.1 (token economy + idioma + transparência)
+- **`.vibecoding/plan/PLANO-TESTES-V0.0.1.md`** — Plano de testes progressivo para homologação v0.0.1
 - **`.vibecoding/intent/vision.md`** — Visão estratégica
 - **`.vibecoding/intent/product_scope.md`** — Escopo do produto
 - **`.vibecoding/architecture/architecture.md`** — Arquitetura do sistema
