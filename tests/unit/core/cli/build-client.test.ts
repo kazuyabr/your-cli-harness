@@ -76,8 +76,8 @@ describe("buildClient", () => {
     }
   });
 
-  it("builds a client successfully", () => {
-    const result = buildClient(TEST_CLIENT_NAME);
+  it("builds a client successfully", async () => {
+    const result = await buildClient(TEST_CLIENT_NAME);
 
     expect(result.success).toBe(true);
     expect(result.name).toBe(TEST_CLIENT_NAME);
@@ -86,8 +86,8 @@ describe("buildClient", () => {
     expect(result.outputPath).toContain(TEST_CLIENT_NAME);
   });
 
-  it("creates output directory with files", () => {
-    const result = buildClient(TEST_CLIENT_NAME);
+  it("creates output directory with files", async () => {
+    const result = await buildClient(TEST_CLIENT_NAME);
 
     expect(existsSync(result.outputPath)).toBe(true);
     expect(existsSync(resolve(result.outputPath, "cli.ts"))).toBe(true);
@@ -95,28 +95,28 @@ describe("buildClient", () => {
     expect(existsSync(resolve(result.outputPath, "config.yaml"))).toBe(true);
   });
 
-  it("generates valid package.json", () => {
-    const result = buildClient(TEST_CLIENT_NAME);
+  it("generates valid package.json", async () => {
+    const result = await buildClient(TEST_CLIENT_NAME);
     const packageJson = JSON.parse(
       require("node:fs").readFileSync(resolve(result.outputPath, "package.json"), "utf-8")
     );
 
-    expect(packageJson.name).toBe(TEST_CLIENT_NAME);
+    expect(packageJson.name).toBe(`@${TEST_CLIENT_NAME}/cli`);
     expect(packageJson.version).toBe("1.0.0");
     expect(packageJson.bin[TEST_CLIENT_NAME]).toBe("./cli.js");
   });
 
-  it("returns error for non-existent client", () => {
-    const result = buildClient("non-existent-client");
+  it("returns error for non-existent client", async () => {
+    const result = await buildClient("non-existent-client");
 
     expect(result.success).toBe(false);
     expect(result.error).toContain("not found");
   });
 
-  it("returns error for invalid config", () => {
+  it("returns error for invalid config", async () => {
     writeFileSync(resolve(TEST_CLIENT_DIR, "config.yaml"), "invalid: yaml: [[");
 
-    const result = buildClient(TEST_CLIENT_NAME);
+    const result = await buildClient(TEST_CLIENT_NAME);
 
     expect(result.success).toBe(false);
     expect(result.error).toBeDefined();

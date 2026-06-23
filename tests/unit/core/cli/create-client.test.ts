@@ -23,8 +23,8 @@ describe("createClient", () => {
     }
   });
 
-  it("creates client directory structure", () => {
-    createClient(TEST_CLIENT_NAME);
+  it("creates client directory structure", async () => {
+    await createClient(TEST_CLIENT_NAME);
 
     expect(existsSync(TEST_CLIENT_DIR)).toBe(true);
     expect(existsSync(resolve(TEST_CLIENT_DIR, "config.yaml"))).toBe(true);
@@ -33,43 +33,61 @@ describe("createClient", () => {
     expect(existsSync(resolve(TEST_CLIENT_DIR, "skills"))).toBe(true);
     expect(existsSync(resolve(TEST_CLIENT_DIR, "agents"))).toBe(true);
     expect(existsSync(resolve(TEST_CLIENT_DIR, "memory", "MEMORY.md"))).toBe(true);
+    expect(existsSync(resolve(TEST_CLIENT_DIR, ".vibecoding"))).toBe(true);
+    expect(existsSync(resolve(TEST_CLIENT_DIR, "package.json"))).toBe(true);
   });
 
-  it("generates config.yaml with client name", () => {
-    createClient(TEST_CLIENT_NAME);
+  it("generates config.yaml with client name", async () => {
+    await createClient(TEST_CLIENT_NAME);
 
     const config = readFileSync(resolve(TEST_CLIENT_DIR, "config.yaml"), "utf-8");
     expect(config).toContain(`name: ${TEST_CLIENT_NAME}`);
     expect(config).toContain(`command: ${TEST_CLIENT_NAME}`);
   });
 
-  it("generates CLAUDE.md with client name", () => {
-    createClient(TEST_CLIENT_NAME);
+  it("generates CLAUDE.md with client name", async () => {
+    await createClient(TEST_CLIENT_NAME);
 
     const claudeMd = readFileSync(resolve(TEST_CLIENT_DIR, "CLAUDE.md"), "utf-8");
     expect(claudeMd).toContain(TEST_CLIENT_NAME);
     expect(claudeMd).toContain("CLAUDE.md");
   });
 
-  it("generates memory/MEMORY.md with client name", () => {
-    createClient(TEST_CLIENT_NAME);
+  it("generates memory/MEMORY.md with client name", async () => {
+    await createClient(TEST_CLIENT_NAME);
 
     const memoryMd = readFileSync(resolve(TEST_CLIENT_DIR, "memory", "MEMORY.md"), "utf-8");
     expect(memoryMd).toContain(TEST_CLIENT_NAME);
   });
 
-  it("generates branding/logo.txt with default logo", () => {
-    createClient(TEST_CLIENT_NAME);
+  it("generates branding/logo.txt with FIGlet logo", async () => {
+    await createClient(TEST_CLIENT_NAME);
 
     const logo = readFileSync(resolve(TEST_CLIENT_DIR, "branding", "logo.txt"), "utf-8");
-    expect(logo).toContain("═══");
-    expect(logo).toContain("██╗");
+    expect(logo).toBeTruthy();
+    expect(logo.length).toBeGreaterThan(0);
   });
 
-  it("throws when client already exists", () => {
+  it("generates package.json for npm publish", async () => {
+    await createClient(TEST_CLIENT_NAME);
+
+    const packageJson = JSON.parse(readFileSync(resolve(TEST_CLIENT_DIR, "package.json"), "utf-8"));
+    expect(packageJson.name).toBe(`@${TEST_CLIENT_NAME}/cli`);
+    expect(packageJson.bin[TEST_CLIENT_NAME]).toBe("./cli.js");
+  });
+
+  it("generates .vibecoding directory", async () => {
+    await createClient(TEST_CLIENT_NAME);
+
+    expect(existsSync(resolve(TEST_CLIENT_DIR, ".vibecoding"))).toBe(true);
+    expect(existsSync(resolve(TEST_CLIENT_DIR, ".vibecoding", "vision.md"))).toBe(true);
+    expect(existsSync(resolve(TEST_CLIENT_DIR, ".vibecoding", "decisions", "invariants.md"))).toBe(true);
+  });
+
+  it("throws when client already exists", async () => {
     mkdirSync(TEST_CLIENT_DIR, { recursive: true });
 
-    expect(() => createClient(TEST_CLIENT_NAME)).toThrow(`already exists`);
+    await expect(createClient(TEST_CLIENT_NAME)).rejects.toThrow("already exists");
   });
 });
 
@@ -80,6 +98,8 @@ describe("getClientStructure", () => {
     expect(structure).toContain("src/clients/myapp/");
     expect(structure).toContain("src/clients/myapp/config.yaml");
     expect(structure).toContain("src/clients/myapp/CLAUDE.md");
+    expect(structure).toContain("src/clients/myapp/package.json");
+    expect(structure).toContain("src/clients/myapp/.vibecoding/");
     expect(structure).toContain("src/clients/myapp/branding/");
     expect(structure).toContain("src/clients/myapp/branding/logo.txt");
     expect(structure).toContain("src/clients/myapp/skills/");

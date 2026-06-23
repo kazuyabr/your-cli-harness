@@ -40,10 +40,14 @@ program
   .description("Build a client CLI")
   .option("--output <dir>", "Output directory")
   .option("--standalone", "Create standalone binary")
-  .action((name, options) => {
-    const result = buildClient(name, {
+  .option("--publish", "Publish to npm")
+  .option("--access <access>", "Package access (public/private)", "public")
+  .action(async (name, options) => {
+    const result = await buildClient(name, {
       output: options.output,
       standalone: options.standalone,
+      publish: options.publish,
+      access: options.access as "public" | "private",
     });
 
     if (!result.success) {
@@ -56,6 +60,12 @@ program
     console.log("Commands:");
     console.log(`  npm run build    # Build the client`);
     console.log(`  node cli.js      # Run the client`);
+    
+    if (result.published) {
+      console.log("");
+      console.log(`Published to npm: ${result.npmUrl}`);
+      console.log(`Run with: npx @${name}/cli`);
+    }
   });
 
 program

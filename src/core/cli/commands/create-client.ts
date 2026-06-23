@@ -1,27 +1,18 @@
 // src/core/cli/commands/create-client.ts
 
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { resolve, join } from "node:path";
+import { homedir } from "node:os";
 import { createLogger } from "../../../shared/logger.js";
+import figlet from "figlet";
 
 const logger = createLogger();
 
 export interface CreateClientOptions {
   template?: string;
+  publish?: boolean;
+  access?: "public" | "private";
 }
-
-const DEFAULT_LOGO = `
-╔══════════════════════════════════════════════╗
-║                                              ║
-║   ██╗ ██████╗  ██████╗  █████╗ ████████╗    ║
-║   ██║██╔═══██╗██╔════╝ ██╔══██╗╚══██╔══╝    ║
-║   ██║██║   ██║██║  ███╗███████║   ██║       ║
-║   ██║██║   ██║██║   ██║██╔══██║   ██║       ║
-║   ██║╚██████╔╝╚██████╔╝██║  ██║   ██║       ║
-║   ╚═╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═╝   ╚═╝       ║
-║                                              ║
-╚══════════════════════════════════════════════╝
-`;
 
 const DEFAULT_CONFIG_TEMPLATE = (name: string) => `name: ${name}
 command: ${name}
@@ -29,8 +20,8 @@ version: 0.1.0
 description: "${name} AI CLI — Your intelligent development companion"
 
 llm:
-  provider: anthropic
-  model: claude-sonnet-4-20250514
+  provider: openrouter
+  model: openrouter/owl-alpha
   maxTokens: 8192
   temperature: 0.7
 
@@ -138,7 +129,65 @@ Each skill should follow the Agent Skills format:
 - Instructions in markdown
 `;
 
-export function createClient(name: string, _options: CreateClientOptions = {}): void {
+const DEFAULT_PACKAGE_JSON = (name: string, access: string = "public") => ({
+  name: `@${name}/cli`,
+  version: "0.1.0",
+  description: `${name} AI CLI — Your intelligent development companion`,
+  type: "module",
+  bin: {
+    [name]: "./cli.js",
+  },
+  files: [
+    "cli.js",
+    "cli.d.ts",
+  ],
+  engines: {
+    node: ">=20.0.0",
+  },
+  scripts: {
+    prepublishOnly: "echo 'Ready to publish!'",
+  },
+  publishConfig: {
+    access,
+  },
+});
+
+const DEFAULT_VIBECODING_VISION = (name: string) => `# Vision
+
+## Product
+
+**${name}** is an AI-powered CLI built on Your CLI Harness framework.
+
+## Goals
+
+- Provide intelligent development assistance
+- Reduce token costs through compression
+- Support multiple languages
+- Integrate with existing workflows
+
+## Target Users
+
+- Developers
+- Teams
+- Enterprises
+`;
+
+const DEFAULT_VIBECODING_INVARIANTS = `# Invariants
+
+## INV-001: Core Isolation
+Core logic (\`src/core/\`) must NEVER contain client-specific code.
+
+## INV-002: Test Coverage
+All core modules must have 100% test coverage.
+
+## INV-003: Type Safety
+All code must be TypeScript with strict mode.
+
+## INV-004: Backward Compatibility
+Changes must not break existing clients.
+`;
+
+export async function createClient(name: string, options: CreateClientOptions = {}): Promise<void> {
   const clientsDir = resolve(process.cwd(), "src", "clients");
   const clientDir = resolve(clientsDir, name);
 
@@ -155,14 +204,32 @@ export function createClient(name: string, _options: CreateClientOptions = {}): 
   mkdirSync(resolve(clientDir, "agents"), { recursive: true });
   mkdirSync(resolve(clientDir, "memory"), { recursive: true });
 
+  // Create .vibecoding directory with .gitkeep
+  const vibecodingDir = resolve(clientDir, ".vibecoding");
+  mkdirSync(vibecodingDir, { recursive: true });
+  mkdirSync(resolve(vibecodingDir, "intent"), { recursive: true });
+  mkdirSync(resolve(vibecodingDir, "decisions"), { recursive: true });
+  mkdirSync(resolve(vibecodingDir, "context"), { recursive: true });
+  mkdirSync(resolve(vibecodingDir, "plan"), { recursive: true });
+  mkdirSync(resolve(vibecodingDir, "memory"), { recursive: true });
+  
+  // Create .gitkeep files
+  writeFileSync(resolve(vibecodingDir, ".gitkeep"), "");
+  writeFileSync(resolve(vibecodingDir, "intent", ".gitkeep"), "");
+  writeFileSync(resolve(vibecodingDir, "decisions", ".gitkeep"), "");
+  writeFileSync(resolve(vibecodingDir, "context", ".gitkeep"), "");
+  writeFileSync(resolve(vibecodingDir, "plan", ".gitkeep"), "");
+  writeFileSync(resolve(vibecodingDir, "memory", ".gitkeep"), "");
+
   // Create config.yaml
   writeFileSync(resolve(clientDir, "config.yaml"), DEFAULT_CONFIG_TEMPLATE(name));
 
   // Create CLAUDE.md
   writeFileSync(resolve(clientDir, "CLAUDE.md"), DEFAULT_CLAUDE_MD(name));
 
-  // Create branding/logo.txt
-  writeFileSync(resolve(clientDir, "branding", "logo.txt"), DEFAULT_LOGO);
+  // Generate FIGlet logo
+  const logo = figlet.textSync(name, { font: "ANSI Shadow" });
+  writeFileSync(resolve(clientDir, "branding", "logo.txt"), logo);
 
   // Create memory/MEMORY.md
   writeFileSync(resolve(clientDir, "memory", "MEMORY.md"), DEFAULT_MEMORY_MD(name));
@@ -173,7 +240,24 @@ export function createClient(name: string, _options: CreateClientOptions = {}): 
   // Create agents README
   writeFileSync(resolve(clientDir, "agents", "README.md"), `# Agents Directory\n\nPlace custom agent definitions here.\n`);
 
+  // Create package.json for npm publish
+  const packageJson = DEFAULT_PACKAGE_JSON(name, options.access || "public");
+  writeFileSync(resolve(clientDir, "package.json"), JSON.stringify(packageJson, null, 2));
+
+  // Create .vibecoding/vision.md
+  writeFileSync(resolve(vibecodingDir, "vision.md"), DEFAULT_VIBECODING_VISION(name));
+
+  // Create .vibecoding/invariants.md
+  writeFileSync(resolve(vibecodingDir, "decisions", "invariants.md"), DEFAULT_VIBECODING_INVARIANTS);
+
+  // Create user config directory structure (for reference)
+  const userConfigDir = join(homedir(), ".config", name);
+  const userDataDir = join(homedir(), ".local", "share", name);
+  
   logger.info(`Client "${name}" created successfully`);
+  logger.info(`User config directory: ${userConfigDir}`);
+  logger.info(`User data directory: ${userDataDir}`);
+  logger.info(`Project .vibecoding directory: ${vibecodingDir}`);
 }
 
 export function getClientStructure(name: string): string[] {
@@ -182,6 +266,10 @@ export function getClientStructure(name: string): string[] {
     `${base}/`,
     `${base}/config.yaml`,
     `${base}/CLAUDE.md`,
+    `${base}/package.json`,
+    `${base}/.vibecoding/`,
+    `${base}/.vibecoding/vision.md`,
+    `${base}/.vibecoding/decisions/invariants.md`,
     `${base}/branding/`,
     `${base}/branding/logo.txt`,
     `${base}/skills/`,
