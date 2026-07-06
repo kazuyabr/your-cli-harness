@@ -62,6 +62,34 @@
 **Razão**: Padrão comprovado, MEMORY.md como index, 200 linhas/25KB limit
 **Alternativas consideradas**: DB-only (rejeitado — sem transparência), sem persistência (rejeitado — perde aprendizados)
 
+### DEC-011: Terminologia TUI vs CLI
+**Data**: 2026-07-06
+**Status**: Aprovada
+**Razão**: CLIs interativos modernos (OpenCode, CodeWhale, Codex) usam TUI com painéis, streaming, e slash commands. CLI é para comandos avulsos.
+**Definições**:
+- **TUI**: Interface interativa no terminal (painéis, streaming, slash commands) — `jogatinando`
+- **CLI**: Comandos avulsos com saída de texto — `jogatinando status`
+- **Slash**: Comandos dentro da TUI — `/help`, `/connect`
+**Alternativas consideradas**: Apenas CLI (rejeitado — UX pobre), Electron (rejeitado — pesado demais)
+
+### DEC-012: Autenticação de Usuários (futuro)
+**Data**: 2026-07-06
+**Status**: Planejada
+**Razão**: Controle de acesso, personalização por usuário, rate limiting
+**Comandos planejados**:
+- `jogatinando auth login`
+- `jogatinando auth logout`
+- `jogatinando auth whoami`
+**Implementação**: JWT com refresh token, integração com provedores OAuth
+
+### DEC-013: Ink como framework TUI
+**Data**: 2026-07-06
+**Status**: Aprovada
+**Razão**: Ink é o framework React para terminais mais maduro. Flexbox via Yoga, hooks, componentes. Usado pelo Codex CLI da OpenAI.
+**Stack**: Ink v7.1.0 + React 19 + ink-text-input + ink-select-input + ink-markdown + ink-spinner
+**Referências**: OpenCode (Go/Bubble Tea), CodeWhale (Rust/Ratatui), Codex CLI (Ink)
+**Alternativas consideradas**: Blessed (rejeitado — API antiga), custom (rejeitado — muito trabalho)
+
 ## Documentação Relacionada
 
 - [Invariants](./invariants.md) — Invariantes do sistema
