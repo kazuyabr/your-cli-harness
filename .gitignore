@@ -23,4 +23,5 @@ tests/tmp/
 # Environment
 .env
 .env.local
+!.env.sample
 .cortex/
