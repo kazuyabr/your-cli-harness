@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { buildClient, listClients } from "../../../../src/core/cli/commands/build-client.js";
-import { existsSync, rmSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, rmSync, mkdirSync, writeFileSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const TEST_CLIENT_NAME = "test-build-client";
@@ -98,7 +98,7 @@ describe("buildClient", () => {
   it("generates valid package.json", async () => {
     const result = await buildClient(TEST_CLIENT_NAME);
     const packageJson = JSON.parse(
-      require("node:fs").readFileSync(resolve(result.outputPath, "package.json"), "utf-8")
+      readFileSync(resolve(result.outputPath, "package.json"), "utf-8")
     );
 
     expect(packageJson.name).toBe(`@${TEST_CLIENT_NAME}/cli`);

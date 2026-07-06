@@ -1,7 +1,7 @@
 // src/core/memory/manager.ts
 // Memory Manager: auto-memory, MEMORY.md management, compaction, session memory
 
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, mkdirSync, statSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 
 import type { AutoMemoryConfig } from "../../shared/types.js";
@@ -91,7 +91,7 @@ export class MemoryManager {
 
     const content = readFileSync(this.memoryPath, "utf-8");
     const lines = content.split("\n");
-    const stat = require("node:fs").statSync(this.memoryPath);
+    const stat = statSync(this.memoryPath);
 
     return {
       totalLines: lines.length,

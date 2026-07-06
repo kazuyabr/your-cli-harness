@@ -5,6 +5,7 @@ import type { VectorStore, Embedder, VectorStoreConfig } from "./types.js";
 import type { IndexerConfig } from "./types.js";
 import { QdrantAdapter } from "./qdrant.js";
 import { PineconeAdapter } from "./pinecone.js";
+import { OpenAIEmbedder, NullEmbedder } from "./embedder.js";
 import { DocumentIndexer, type IndexerResult } from "./indexer.js";
 import { MCPError } from "../../../shared/errors.js";
 import { createLogger } from "../../../shared/logger.js";
@@ -99,7 +100,6 @@ export class VectorMemoryManager {
 
   private createEmbedder(config: VectorMemoryConfig["embedder"]): Embedder {
     if (config.provider === "openai" && config.apiKey) {
-      const { OpenAIEmbedder } = require("./embedder.js");
       return new OpenAIEmbedder({
         apiKey: config.apiKey,
         baseURL: config.baseURL,
@@ -107,7 +107,6 @@ export class VectorMemoryManager {
         dimensions: config.dimensions,
       });
     }
-    const { NullEmbedder } = require("./embedder.js");
     return new NullEmbedder(config.dimensions ?? 1536);
   }
 

@@ -1,7 +1,7 @@
 // src/cli.ts
 
 import { Command } from "commander";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { ConfigLoader } from "./core/config/loader.js";
@@ -78,8 +78,6 @@ program
       console.log("No clients found.");
       return;
     }
-
-    const { readdirSync, statSync } = require("node:fs") as typeof import("node:fs");
 
     try {
       const entries = readdirSync(clientsDir);
