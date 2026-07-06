@@ -31,8 +31,6 @@
   "scripts": {
     "dev": "tsx watch src/cli.ts",
     "build": "tsup src/cli.ts src/index.ts src/core/index.ts --format esm --dts --clean",
-    "build:all": "npm run build && npm run build:clients",
-    "build:clients": "tsup src/clients/*/cli.ts --format esm --dts --out-dir dist/clients",
     "build:binary": "pkg dist/cli.js --targets node20-win-x64 --out-path bin",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/ tests/ --ext .ts",
@@ -45,8 +43,8 @@
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
     "test:e2e": "playwright test",
-    "harness:create-client": "tsx src/cli.ts create-client",
-    "harness:build-client": "tsx src/cli.ts build-client",
+    "harness:create-client": "node dist/cli.js create-client",
+    "harness:build-client": "node dist/cli.js build-client",
     "clean": "rimraf dist bin"
   },
   "dependencies": {
