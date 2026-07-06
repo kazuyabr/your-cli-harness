@@ -130,7 +130,7 @@ describe("E2E: CLI Commands", () => {
       run("build-client my-e2e-client");
       const pkgPath = resolve(PROJECT_ROOT, "dist", "clients", "my-e2e-client", "package.json");
       const pkg = JSON.parse(readFileSync(pkgPath, "utf-8"));
-      expect(pkg.name).toBe("my-e2e-client");
+      expect(pkg.name).toBe("@my-e2e-client/cli");
       expect(pkg.bin).toBeDefined();
       expect(pkg.bin["my-e2e-client"]).toBe("./cli.js");
     });

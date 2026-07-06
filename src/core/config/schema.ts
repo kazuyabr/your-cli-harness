@@ -3,7 +3,7 @@
 import { z } from "zod";
 
 const LLMConfigSchema = z.object({
-  provider: z.enum(["anthropic", "openai", "azure"]).default("anthropic"),
+  provider: z.enum(["anthropic", "openai", "azure", "openrouter", "groq", "together", "lmstudio", "ollama", "google", "xai"]).default("anthropic"),
   model: z.string().default("claude-sonnet-4-20250514"),
   apiKey: z.string().optional(),
   baseURL: z.string().url().optional(),
