@@ -187,12 +187,13 @@ All code must be TypeScript with strict mode.
 Changes must not break existing clients.
 `;
 
-export async function createClient(name: string, options: CreateClientOptions = {}): Promise<void> {
+export async function createClient(name: string, options: CreateClientOptions = {}): Promise<boolean> {
   const clientsDir = resolve(process.cwd(), "src", "clients");
   const clientDir = resolve(clientsDir, name);
 
   if (existsSync(clientDir)) {
-    throw new Error(`Client "${name}" already exists at ${clientDir}`);
+    console.log(`Client "${name}" already exists at ${clientDir}`);
+    return false;
   }
 
   logger.info(`Creating client "${name}"...`);
@@ -258,6 +259,7 @@ export async function createClient(name: string, options: CreateClientOptions = 
   logger.info(`User config directory: ${userConfigDir}`);
   logger.info(`User data directory: ${userDataDir}`);
   logger.info(`Project .vibecoding directory: ${vibecodingDir}`);
+  return true;
 }
 
 export function getClientStructure(name: string): string[] {

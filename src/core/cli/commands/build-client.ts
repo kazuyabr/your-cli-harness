@@ -80,7 +80,7 @@ export async function buildClient(name: string, options: BuildClientOptions = {}
 
     // Render logo to console
     console.log("");
-    console.log(BrandingLoader.renderLogo(branding));
+    console.log(BrandingLoader.renderLogo(branding, name));
     console.log("");
 
     const result: BuildResult = {
@@ -124,7 +124,8 @@ export async function buildClient(name: string, options: BuildClientOptions = {}
 }
 
 function generateClientEntryPoint(name: string, config: { name: string; version: string; description: string; command: string }): string {
-  return `// Auto-generated client entry point for ${name}
+  return `#!/usr/bin/env node
+// Auto-generated client entry point for ${name}
 import { Command } from "commander";
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";

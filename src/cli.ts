@@ -9,6 +9,7 @@ import { ConfigLoader } from "./core/config/loader.js";
 import { initProject } from "./core/cli/commands/init.js";
 import { createClient } from "./core/cli/commands/create-client.js";
 import { buildClient } from "./core/cli/commands/build-client.js";
+import { deleteClient } from "./core/cli/commands/delete-client.js";
 
 const program = new Command();
 
@@ -21,15 +22,29 @@ program
   .command("create-client <name>")
   .description("Create a new client from template")
   .option("--template <name>", "Template to use", "minimal")
+  .action(async (name, options) => {
+    try {
+      const created = await createClient(name, { template: options.template });
+      if (created) {
+        console.log("");
+        console.log("Next steps:");
+        console.log(`  1. Edit src/clients/${name}/config.yaml`);
+        console.log(`  2. Add skills to src/clients/${name}/skills/`);
+        console.log(`  3. Run: harness build-client ${name}`);
+      }
+    } catch (err) {
+      console.error(`Error: ${err instanceof Error ? err.message : err}`);
+      process.exit(1);
+    }
+  });
+
+program
+  .command("delete-client <name>")
+  .description("Delete a client (source, dist, and bin entry)")
+  .option("--force", "Skip confirmation")
   .action((name, options) => {
     try {
-      createClient(name, { template: options.template });
-      console.log(`Client "${name}" created successfully.`);
-      console.log("");
-      console.log("Next steps:");
-      console.log(`  1. Edit src/clients/${name}/config.yaml`);
-      console.log(`  2. Add skills to src/clients/${name}/skills/`);
-      console.log(`  3. Run: harness build-client ${name}`);
+      deleteClient(name, { force: options.force });
     } catch (err) {
       console.error(`Error: ${err instanceof Error ? err.message : err}`);
       process.exit(1);

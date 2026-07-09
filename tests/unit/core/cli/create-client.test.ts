@@ -84,10 +84,11 @@ describe("createClient", () => {
     expect(existsSync(resolve(TEST_CLIENT_DIR, ".vibecoding", "decisions", "invariants.md"))).toBe(true);
   });
 
-  it("throws when client already exists", async () => {
+  it("returns false when client already exists", async () => {
     mkdirSync(TEST_CLIENT_DIR, { recursive: true });
 
-    await expect(createClient(TEST_CLIENT_NAME)).rejects.toThrow("already exists");
+    const result = await createClient(TEST_CLIENT_NAME);
+    expect(result).toBe(false);
   });
 });
 

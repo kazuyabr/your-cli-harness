@@ -4,9 +4,9 @@ import chalk from "chalk";
 import type { BrandingConfig } from "../../../shared/types.js";
 import { BrandingLoader } from "../../branding/loader.js";
 
-export function showHelp(branding: BrandingConfig, commands: Array<{ name: string; description: string }>): void {
+export function showHelp(branding: BrandingConfig, commands: Array<{ name: string; description: string }>, clientName?: string): void {
   console.log("");
-  console.log(BrandingLoader.renderLogo(branding));
+  console.log(BrandingLoader.renderLogo(branding, clientName));
   console.log("");
   console.log(chalk.hex(branding.colors.primary)("Usage:"));
   const prompt = chalk.hex(branding.colors.secondary)("$");

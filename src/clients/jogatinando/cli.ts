@@ -49,14 +49,14 @@ program
   .command("help")
   .description("Show help information")
   .action(() => {
-    const { branding } = loadClient();
+    const { config, branding } = loadClient();
     showHelp(branding, [
       { name: "help", description: "Show this help" },
       { name: "status", description: "Show session status" },
       { name: "config", description: "Show current configuration" },
       { name: "memory", description: "Manage auto-memory" },
       { name: "compact", description: "Compact session context" },
-    ]);
+    ], config.name);
   });
 
 program
@@ -146,9 +146,9 @@ program
 
 program.action(async (prompt: string[], options) => {
   if (prompt.length === 0) {
-    const { branding } = loadClient();
+    const { config, branding } = loadClient();
     console.log("");
-    console.log(BrandingLoader.renderLogo(branding));
+    console.log(BrandingLoader.renderLogo(branding, config.name));
     console.log("");
     console.log("Type 'jogatinando help' for usage information.");
     console.log("");
@@ -159,7 +159,7 @@ program.action(async (prompt: string[], options) => {
   const userPrompt = prompt.join(" ");
 
   console.log("");
-  console.log(BrandingLoader.renderLogo(branding));
+  console.log(BrandingLoader.renderLogo(branding, config.name));
   console.log("");
 
   const mode = options.plan ? "plan" : options.build ? "build" : options.yolo ? "yolo" : "default";

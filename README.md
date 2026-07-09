@@ -43,27 +43,27 @@ npx @my-cli/cli
 
 Automatic compression to save costs:
 
-| Technique | Reduction | Description |
-|-----------|-----------|-------------|
-| **Headroom** | 60-95% | Compresses input (JSON, code, logs) |
-| **Caveman** | 65-75% | Compresses output (removes filler) |
-| **Cache** | 10-30% | Reuses previous compressions |
+| Technique          | Reduction | Description                         |
+| ------------------ | --------- | ----------------------------------- |
+| **Headroom** | 60-95%    | Compresses input (JSON, code, logs) |
+| **Caveman**  | 65-75%    | Compresses output (removes filler)  |
+| **Cache**    | 10-30%    | Reuses previous compressions        |
 
 ### Multi-Language Support
 
 Detects and responds in 10 languages:
 
-| Language | Code | Flag |
-|----------|------|------|
+| Language            | Code      | Flag |
+| ------------------- | --------- | ---- |
 | Português (Brasil) | `pt-BR` | 🇧🇷 |
-| English | `en` | 🇺🇸 |
-| Español | `es` | 🇪🇸 |
-| Français | `fr` | 🇫🇷 |
-| Deutsch | `de` | 🇩🇪 |
-| Italiano | `it` | 🇮🇹 |
-| 日本語 | `ja` | 🇯🇵 |
-| 中文 | `zh` | 🇨🇳 |
-| 한국어 | `ko` | 🇰🇷 |
+| English             | `en`    | 🇺🇸 |
+| Español            | `es`    | 🇪🇸 |
+| Français           | `fr`    | 🇫🇷 |
+| Deutsch             | `de`    | 🇩🇪 |
+| Italiano            | `it`    | 🇮🇹 |
+| 日本語              | `ja`    | 🇯🇵 |
+| 中文                | `zh`    | 🇨🇳 |
+| 한국어              | `ko`    | 🇰🇷 |
 
 ### Smart Orchestration
 
