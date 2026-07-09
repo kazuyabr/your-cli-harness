@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 // src/clients/jogatinando/cli.ts
 
 import { Command } from "commander";
