@@ -1,0 +1,22 @@
+{
+  "name": "@jogatinando/cli",
+  "version": "0.1.0",
+  "description": "jogatinando AI CLI — Your intelligent development companion",
+  "type": "module",
+  "bin": {
+    "jogatinando": "./cli.js"
+  },
+  "files": [
+    "cli.js",
+    "cli.d.ts"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "prepublishOnly": "echo 'Ready to publish!'"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

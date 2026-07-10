@@ -8,6 +8,31 @@ import { createLogger } from "../../../shared/logger.js";
 
 const logger = createLogger();
 
+function addBinEntry(commandName: string, binPath: string): void {
+  const packageJsonPath = resolve(process.cwd(), "package.json");
+
+  if (!existsSync(packageJsonPath)) return;
+
+  try {
+    const content = readFileSync(packageJsonPath, "utf-8");
+    const pkg = JSON.parse(content) as Record<string, unknown>;
+
+    if (!pkg.bin || typeof pkg.bin !== "object") {
+      pkg.bin = {};
+    }
+
+    const bin = pkg.bin as Record<string, string>;
+    if (bin[commandName] !== binPath) {
+      bin[commandName] = binPath;
+      pkg.bin = bin;
+      writeFileSync(packageJsonPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
+      logger.info(`Added bin entry "${commandName}" -> "${binPath}" to package.json`);
+    }
+  } catch (err) {
+    logger.warn(`Failed to update package.json: ${err}`);
+  }
+}
+
 export interface BuildClientOptions {
   output?: string;
   standalone?: boolean;
@@ -82,6 +107,9 @@ export async function buildClient(name: string, options: BuildClientOptions = {}
     console.log("");
     console.log(BrandingLoader.renderLogo(branding, name));
     console.log("");
+
+    // Add bin entry to main package.json
+    addBinEntry(config.command, `./dist/clients/${name}/cli.js`);
 
     const result: BuildResult = {
       name: config.name,

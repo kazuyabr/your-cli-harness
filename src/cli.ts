@@ -9,7 +9,7 @@ import { ConfigLoader } from "./core/config/loader.js";
 import { initProject } from "./core/cli/commands/init.js";
 import { createClient } from "./core/cli/commands/create-client.js";
 import { buildClient } from "./core/cli/commands/build-client.js";
-import { deleteClient } from "./core/cli/commands/delete-client.js";
+import { deleteClient, deleteAllClients } from "./core/cli/commands/delete-client.js";
 
 const program = new Command();
 
@@ -39,12 +39,20 @@ program
   });
 
 program
-  .command("delete-client <name>")
-  .description("Delete a client (source, dist, and bin entry)")
+  .command("delete-client [name]")
+  .description("Delete a client (source, dist, and bin entry). Use --all to delete all clients.")
+  .option("--all", "Delete all clients")
   .option("--force", "Skip confirmation")
   .action((name, options) => {
     try {
-      deleteClient(name, { force: options.force });
+      if (options.all) {
+        deleteAllClients();
+      } else if (name) {
+        deleteClient(name, { force: options.force });
+      } else {
+        console.log("Please specify a client name or use --all to delete all clients.");
+        console.log("Usage: harness delete-client <name> | harness delete-client --all");
+      }
     } catch (err) {
       console.error(`Error: ${err instanceof Error ? err.message : err}`);
       process.exit(1);

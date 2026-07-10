@@ -1,6 +1,6 @@
 // src/core/cli/commands/delete-client.ts
 
-import { existsSync, rmSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, rmSync, readFileSync, writeFileSync, readdirSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { createLogger } from "../../../shared/logger.js";
@@ -34,6 +34,35 @@ export function deleteClient(name: string, _options: DeleteClientOptions = {}): 
   removeBinEntry(name);
 
   console.log(`Client "${name}" deleted successfully.`);
+}
+
+export function deleteAllClients(): void {
+  const clientsDir = resolve(process.cwd(), "src", "clients");
+
+  if (!existsSync(clientsDir)) {
+    console.log("No clients found.");
+    return;
+  }
+
+  const entries = readdirSync(clientsDir);
+  const clients = entries.filter((name: string) =>
+    statSync(resolve(clientsDir, name)).isDirectory()
+  );
+
+  if (clients.length === 0) {
+    console.log("No clients found.");
+    return;
+  }
+
+  console.log(`Deleting ${clients.length} client(s)...`);
+  console.log("");
+
+  for (const name of clients) {
+    deleteClient(name);
+  }
+
+  console.log("");
+  console.log(`All ${clients.length} client(s) deleted.`);
 }
 
 function removeBinEntry(name: string): void {
