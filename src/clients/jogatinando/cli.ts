@@ -15,6 +15,8 @@ import { LLMFactory } from "../../core/llm/factory.js";
 import { DefaultAgent } from "../../core/agents/default-agent.js";
 import { showHelp } from "../../core/cli/commands/help.js";
 import { showStatus } from "../../core/cli/commands/status.js";
+import { startTUI } from "../../core/cli/tui/index.js";
+import { LanguagePersistence } from "../../core/language/persistence.js";
 import { createLogger } from "../../shared/logger.js";
 
 const logger = createLogger();
@@ -176,11 +178,16 @@ program
 program
   .command("language [lang]")
   .description("Show or change language")
-  .action((lang?: string) => {
+  .action(async (lang?: string) => {
+    const persistence = new LanguagePersistence(CLIENT_DIR);
+
     if (lang) {
+      await persistence.savePreference(lang, false);
       console.log(`Language changed to: ${lang}`);
     } else {
-      console.log("Current language: en");
+      const pref = await persistence.loadPreference();
+      const current = pref?.language ?? "en";
+      console.log(`Current language: ${current}`);
       console.log("Supported: pt-BR, en, es, fr, de, it, ja, zh, ko");
     }
   });
@@ -188,11 +195,12 @@ program
 program.action(async (prompt: string[], options: { plan?: boolean; build?: boolean; yolo?: boolean; compact?: boolean }) => {
   if (prompt.length === 0) {
     const { config, branding } = loadClient();
-    console.log("");
-    console.log(BrandingLoader.renderLogo(branding, config.name));
-    console.log("");
-    console.log("Type '" + "jogatinando" + " help' for usage information.");
-    console.log("");
+    startTUI({
+      clientName: config.name,
+      version: config.version,
+      language: "en",
+      theme: config.branding.theme,
+    });
     return;
   }
 

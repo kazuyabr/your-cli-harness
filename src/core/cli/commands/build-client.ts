@@ -1,6 +1,6 @@
 // src/core/cli/commands/build-client.ts
 
-import { existsSync, readFileSync, mkdirSync, writeFileSync, readdirSync, statSync, unlinkSync } from "node:fs";
+import { existsSync, readFileSync, mkdirSync, writeFileSync, readdirSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import { execSync } from "node:child_process";
 
@@ -92,7 +92,7 @@ export async function buildClient(name: string, options: BuildClientOptions = {}
     const jsPath = resolve(outputDir, "cli.js");
     try {
       logger.info(`Compiling ${name} CLI...`);
-      execSync(`npx esbuild "${srcCliPath}" --outfile="${jsPath}" --format=esm --platform=node --target=es2022 --bundle --external:node:* --external:commander --external:figlet --external:chalk --external:yaml --external:zod --external:better-sqlite3 --external:@modelcontextprotocol/sdk --external:openai --external:@anthropic-ai/sdk --external:@vercel/* --external:ai --external:@ai-sdk/*`, {
+      execSync(`npx esbuild "${srcCliPath}" --outfile="${jsPath}" --format=esm --platform=node --target=es2022 --bundle --external:node:* --external:readline --external:fs --external:path --external:os --external:events --external:stream --external:util --external:tty --external:process --external:buffer --external:crypto --external:child_process --external:url --external:http --external:https --external:net --external:tls --external:zlib --external:dns --external:cluster --external:worker_threads --external:vm --external:assert --external:module --external:perf_hooks --external:commander --external:figlet --external:chalk --external:yaml --external:zod --external:better-sqlite3 --external:@modelcontextprotocol/sdk --external:openai --external:@anthropic-ai/sdk --external:@vercel/* --external:ai --external:@ai-sdk/* --external:ink --external:react --external:ink-text-input --external:ink-select-input --external:ink-spinner --external:ink-markdown --external:react-dom`, {
         cwd: process.cwd(),
         stdio: "pipe",
       });
@@ -187,6 +187,8 @@ import { LLMFactory } from "../../core/llm/factory.js";
 import { DefaultAgent } from "../../core/agents/default-agent.js";
 import { showHelp } from "../../core/cli/commands/help.js";
 import { showStatus } from "../../core/cli/commands/status.js";
+import { startTUI } from "../../core/cli/tui/index.js";
+import { LanguagePersistence } from "../../core/language/persistence.js";
 import { createLogger } from "../../shared/logger.js";
 
 const logger = createLogger();
@@ -348,11 +350,16 @@ program
 program
   .command("language [lang]")
   .description("Show or change language")
-  .action((lang?: string) => {
+  .action(async (lang?: string) => {
+    const persistence = new LanguagePersistence(CLIENT_DIR);
+
     if (lang) {
+      await persistence.savePreference(lang, false);
       console.log(\`Language changed to: \${lang}\`);
     } else {
-      console.log("Current language: en");
+      const pref = await persistence.loadPreference();
+      const current = pref?.language ?? "en";
+      console.log(\`Current language: \${current}\`);
       console.log("Supported: pt-BR, en, es, fr, de, it, ja, zh, ko");
     }
   });
@@ -360,11 +367,12 @@ program
 program.action(async (prompt: string[], options: { plan?: boolean; build?: boolean; yolo?: boolean; compact?: boolean }) => {
   if (prompt.length === 0) {
     const { config, branding } = loadClient();
-    console.log("");
-    console.log(BrandingLoader.renderLogo(branding, config.name));
-    console.log("");
-    console.log("Type '" + "${config.command}" + " help' for usage information.");
-    console.log("");
+    startTUI({
+      clientName: config.name,
+      version: config.version,
+      language: "en",
+      theme: config.branding.theme,
+    });
     return;
   }
 
@@ -443,6 +451,14 @@ function generatePackageJson(_name: string, config: { name: string; version: str
     },
     dependencies: {
       commander: "^12.0.0",
+      ink: "^7.1.0",
+      react: "^19.2.7",
+      "ink-text-input": "^6.0.0",
+      "ink-select-input": "^6.2.0",
+      "ink-spinner": "^5.0.0",
+      "ink-markdown": "^1.0.0",
+      chalk: "^5.4.0",
+      figlet: "^1.11.0",
     },
     devDependencies: {
       tsup: "^8.0.0",
