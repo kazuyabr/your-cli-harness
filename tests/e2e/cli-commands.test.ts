@@ -120,7 +120,7 @@ describe("E2E: CLI Commands", () => {
       run("create-client my-e2e-client");
       run("build-client my-e2e-client");
       const outDir = resolve(PROJECT_ROOT, "dist", "clients", "my-e2e-client");
-      expect(existsSync(resolve(outDir, "cli.ts"))).toBe(true);
+      expect(existsSync(resolve(outDir, "cli.js"))).toBe(true);
       expect(existsSync(resolve(outDir, "package.json"))).toBe(true);
       expect(existsSync(resolve(outDir, "config.yaml"))).toBe(true);
     });
@@ -162,7 +162,7 @@ describe("E2E: CLI Commands", () => {
       const buildOut = run("build-client workflow-test");
       expect(buildOut).toContain("Build complete");
       // Verify the built CLI exists
-      const cliPath = resolve(PROJECT_ROOT, "dist", "clients", "workflow-test", "cli.ts");
+      const cliPath = resolve(PROJECT_ROOT, "dist", "clients", "workflow-test", "cli.js");
       expect(existsSync(cliPath)).toBe(true);
     });
   });

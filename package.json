@@ -8,7 +8,8 @@
     "harness": "./dist/cli.js",
     "test-build-client": "./dist/clients/test-build-client/cli.js",
     "my-e2e-client": "./dist/clients/my-e2e-client/cli.js",
-    "workflow-test": "./dist/clients/workflow-test/cli.js"
+    "workflow-test": "./dist/clients/workflow-test/cli.js",
+    "jogatinando": "./dist/clients/jogatinando/cli.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

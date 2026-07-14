@@ -1,7 +1,9 @@
 // src/core/cli/commands/build-client.ts
 
-import { existsSync, readFileSync, mkdirSync, writeFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, mkdirSync, writeFileSync, readdirSync, statSync, unlinkSync } from "node:fs";
 import { resolve } from "node:path";
+import { execSync } from "node:child_process";
+
 import { ConfigLoader } from "../../config/loader.js";
 import { BrandingLoader } from "../../branding/loader.js";
 import { createLogger } from "../../../shared/logger.js";
@@ -81,7 +83,25 @@ export async function buildClient(name: string, options: BuildClientOptions = {}
 
     // Generate client entry point
     const entryPoint = generateClientEntryPoint(name, config);
-    writeFileSync(resolve(outputDir, "cli.ts"), entryPoint);
+    const tsPath = resolve(outputDir, "cli.ts");
+    const jsPath = resolve(outputDir, "cli.js");
+    writeFileSync(tsPath, entryPoint);
+
+    // Compile cli.ts → cli.js using tsup
+    try {
+      logger.info(`Compiling ${name} CLI...`);
+      execSync(`npx tsup "${tsPath}" --format esm --outDir "${outputDir}"`, {
+        cwd: process.cwd(),
+        stdio: "pipe",
+      });
+      // Remove intermediate .ts file
+      if (existsSync(tsPath)) {
+        unlinkSync(tsPath);
+      }
+      logger.info(`Compiled: ${jsPath}`);
+    } catch (compileErr) {
+      logger.warn(`tsup compilation failed, keeping .ts file: ${compileErr}`);
+    }
 
     // Generate package.json for the client
     const packageJson = generatePackageJson(name, config, options.access || "public");

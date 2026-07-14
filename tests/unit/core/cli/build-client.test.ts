@@ -90,7 +90,7 @@ describe("buildClient", () => {
     const result = await buildClient(TEST_CLIENT_NAME);
 
     expect(existsSync(result.outputPath)).toBe(true);
-    expect(existsSync(resolve(result.outputPath, "cli.ts"))).toBe(true);
+    expect(existsSync(resolve(result.outputPath, "cli.js"))).toBe(true);
     expect(existsSync(resolve(result.outputPath, "package.json"))).toBe(true);
     expect(existsSync(resolve(result.outputPath, "config.yaml"))).toBe(true);
   });
