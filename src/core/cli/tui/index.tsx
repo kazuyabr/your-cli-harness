@@ -1,7 +1,6 @@
 // src/core/cli/tui/index.tsx
 // Entry point for the Ink-based TUI
 
-import React from "react";
 import { render } from "ink";
 
 import { App } from "./App.js";

@@ -41,6 +41,7 @@ export function deleteAllClients(): void {
 
   if (!existsSync(clientsDir)) {
     console.log("No clients found.");
+    cleanOrphanBinEntries();
     return;
   }
 
@@ -51,6 +52,7 @@ export function deleteAllClients(): void {
 
   if (clients.length === 0) {
     console.log("No clients found.");
+    cleanOrphanBinEntries();
     return;
   }
 
@@ -63,6 +65,9 @@ export function deleteAllClients(): void {
 
   console.log("");
   console.log(`All ${clients.length} client(s) deleted.`);
+
+  // Clean up orphan bin entries (entries without matching src/clients/ directory)
+  cleanOrphanBinEntries();
 }
 
 function removeBinEntry(name: string): void {
@@ -85,5 +90,42 @@ function removeBinEntry(name: string): void {
     }
   } catch (err) {
     logger.warn(`Failed to update package.json: ${err}`);
+  }
+}
+
+function cleanOrphanBinEntries(): void {
+  const packageJsonPath = resolve(process.cwd(), "package.json");
+  const clientsDir = resolve(process.cwd(), "src", "clients");
+
+  if (!existsSync(packageJsonPath)) return;
+
+  try {
+    const content = readFileSync(packageJsonPath, "utf-8");
+    const pkg = JSON.parse(content) as Record<string, unknown>;
+
+    if (!pkg.bin || typeof pkg.bin !== "object") return;
+
+    const bin = pkg.bin as Record<string, string>;
+    let changed = false;
+
+    for (const entryName of Object.keys(bin)) {
+      // Keep "harness" always
+      if (entryName === "harness") continue;
+
+      // Check if corresponding client directory exists
+      const clientDir = resolve(clientsDir, entryName);
+      if (!existsSync(clientDir)) {
+        delete bin[entryName];
+        logger.info(`Removed orphan bin entry "${entryName}" from package.json`);
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      pkg.bin = bin;
+      writeFileSync(packageJsonPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
+    }
+  } catch (err) {
+    logger.warn(`Failed to clean orphan bin entries: ${err}`);
   }
 }
